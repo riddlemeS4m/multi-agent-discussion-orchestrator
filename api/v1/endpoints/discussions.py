@@ -17,8 +17,9 @@ async def start_discussion(request: StartOrchestrationRequest):
     - **session_id**: Unique identifier for this discussion session
     - **task**: The task/problem for agents to discuss
     - **agent_types**: List of agent types to include
-    - **mode**: Discussion mode (round_robin or sequential)
-    - **rounds**: Number of rounds for round_robin mode
+    - **mode**: Discussion mode (round_robin, sequential, or adaptive)
+    - **rounds**: Number of rounds for round_robin mode, or max rounds for adaptive mode
+    - **enable_project_manager**: Enable Project Manager to craft contextual prompts using LLM
     """
     # Validate agent types
     available_agents = agent_manager.get_available_agent_types()
@@ -46,14 +47,32 @@ async def start_discussion(request: StartOrchestrationRequest):
         # Add initial task
         orchestrator.add_initial_task(request.task)
         
-        # Run discussion
-        responses = orchestrator.run_discussion(rounds=request.rounds)
-        
-        return OrchestrationResponse(
-            session_id=request.session_id,
-            responses=responses,
-            summary=orchestrator.get_summary()
+        # Run discussion with Project Manager guidance if enabled
+        result = orchestrator.run_discussion(
+            rounds=request.rounds,
+            use_intelligent_prompts=request.enable_project_manager
         )
+        
+        # Handle different response formats (adaptive mode returns dict, others return list)
+        if isinstance(result, dict):
+            # Adaptive mode response
+            return OrchestrationResponse(
+                session_id=request.session_id,
+                responses=result.get("responses", []),
+                summary={
+                    **orchestrator.get_summary(),
+                    "rounds_completed": result.get("rounds_completed"),
+                    "completion_reason": result.get("completion_reason"),
+                    "max_rounds_reached": result.get("max_rounds_reached")
+                }
+            )
+        else:
+            # Round-robin or sequential mode response
+            return OrchestrationResponse(
+                session_id=request.session_id,
+                responses=result,
+                summary=orchestrator.get_summary()
+            )
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -80,9 +99,15 @@ async def get_discussion_history(session_id: str):
 @router.post("/{session_id}/continue", response_model=OrchestrationResponse)
 async def continue_discussion(
     session_id: str,
-    rounds: Optional[int] = 1
+    rounds: Optional[int] = 1,
+    enable_project_manager: Optional[bool] = False
 ):
-    """Continue an existing discussion session for additional rounds"""
+    """
+    Continue an existing discussion session for additional rounds
+    
+    - **rounds**: Number of additional rounds to run
+    - **enable_project_manager**: Enable Project Manager to craft contextual prompts
+    """
     orchestrator = orchestrator_manager.get_orchestrator(session_id)
     
     if not orchestrator:
@@ -92,13 +117,31 @@ async def continue_discussion(
         )
     
     try:
-        responses = orchestrator.run_discussion(rounds=rounds)
-        
-        return OrchestrationResponse(
-            session_id=session_id,
-            responses=responses,
-            summary=orchestrator.get_summary()
+        result = orchestrator.run_discussion(
+            rounds=rounds,
+            use_intelligent_prompts=enable_project_manager
         )
+        
+        # Handle different response formats
+        if isinstance(result, dict):
+            # Adaptive mode response
+            return OrchestrationResponse(
+                session_id=session_id,
+                responses=result.get("responses", []),
+                summary={
+                    **orchestrator.get_summary(),
+                    "rounds_completed": result.get("rounds_completed"),
+                    "completion_reason": result.get("completion_reason"),
+                    "max_rounds_reached": result.get("max_rounds_reached")
+                }
+            )
+        else:
+            # Round-robin or sequential mode response
+            return OrchestrationResponse(
+                session_id=session_id,
+                responses=result,
+                summary=orchestrator.get_summary()
+            )
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

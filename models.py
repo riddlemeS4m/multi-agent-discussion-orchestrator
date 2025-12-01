@@ -32,11 +32,15 @@ class StartOrchestrationRequest(BaseModel):
     )
     mode: OrchestrationMode = Field(
         default=OrchestrationMode.ROUND_ROBIN,
-        description="Orchestration mode (round_robin or sequential)"
+        description="Orchestration mode (round_robin, sequential, or adaptive)"
     )
     rounds: Optional[int] = Field(
         default=2,
-        description="Number of rounds (for round_robin mode)"
+        description="Number of rounds (for round_robin mode) or max rounds (for adaptive mode)"
+    )
+    enable_project_manager: Optional[bool] = Field(
+        default=False,
+        description="If True, the Project Manager agent will use its LLM to craft contextual prompts for each agent"
     )
 
 

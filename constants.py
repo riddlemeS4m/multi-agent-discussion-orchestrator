@@ -17,7 +17,7 @@ class OrchestrationMode(str, Enum):
     """Available orchestration modes"""
     ROUND_ROBIN = "round_robin"
     SEQUENTIAL = "sequential"
-    # We can add DYNAMIC later
+    ADAPTIVE = "adaptive"
 
 class AgentType(str, Enum):
     """Available agent types"""
