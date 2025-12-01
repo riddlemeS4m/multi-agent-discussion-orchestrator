@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from services.agent_manager import agent_manager
-from routers import health, sessions
+from api.v1.api import api_router
 import uvicorn
 
 app = FastAPI(
@@ -9,9 +9,8 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# Include routers
-app.include_router(health.router)
-app.include_router(sessions.router)
+# Include API v1 router with prefix
+app.include_router(api_router, prefix="/api/v1")
 
 
 @app.on_event("startup")
