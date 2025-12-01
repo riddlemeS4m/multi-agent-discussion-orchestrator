@@ -1,24 +1,13 @@
 """Agent management service for handling agent instances and sessions"""
 from typing import Dict, Optional
 from agent import Agent
+from constants import AGENT_CONFIGS
 
 
 class AgentManager:
     """Manages agent instances across different sessions and roles"""
     
-    # Define available agent configurations
-    AGENT_CONFIGS = {
-        "junior_engineer": {
-            "role": "Junior Engineer",
-            "prompt_file": "junior_engineer.md",
-            "model": "gpt-4o-mini"
-        },
-        "product_manager": {
-            "role": "Product Manager",
-            "prompt_file": "product_manager.md",
-            "model": "gpt-4o-mini"
-        }
-    }
+    
     
     def __init__(self):
         # Sessions are now keyed by "session_id:agent_type"
@@ -26,9 +15,9 @@ class AgentManager:
     
     def initialize_default_agents(self):
         """Initialize default agents for each type"""
-        for agent_type in self.AGENT_CONFIGS.keys():
+        for agent_type in AGENT_CONFIGS.keys():
             session_key = f"default:{agent_type}"
-            config = self.AGENT_CONFIGS[agent_type]
+            config = AGENT_CONFIGS[agent_type]
             self.agents[session_key] = Agent(
                 role=config["role"],
                 prompt_file=config["prompt_file"],
@@ -41,13 +30,13 @@ class AgentManager:
         agent_type: str = "junior_engineer"
     ) -> Agent:
         """Get an agent for a session and type, creating if necessary"""
-        if agent_type not in self.AGENT_CONFIGS:
+        if agent_type not in AGENT_CONFIGS:
             raise ValueError(f"Unknown agent type: {agent_type}")
         
         session_key = f"{session_id}:{agent_type}"
         
         if session_key not in self.agents:
-            config = self.AGENT_CONFIGS[agent_type]
+            config = AGENT_CONFIGS[agent_type]
             self.agents[session_key] = Agent(
                 role=config["role"],
                 prompt_file=config["prompt_file"],
@@ -110,7 +99,7 @@ class AgentManager:
     
     def get_available_agent_types(self) -> list:
         """Get list of available agent types"""
-        return list(self.AGENT_CONFIGS.keys())
+        return list(AGENT_CONFIGS.keys())
 
 
 # Global instance

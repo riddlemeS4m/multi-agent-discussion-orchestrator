@@ -63,6 +63,18 @@ class Agent:
         
         return response.content
     
+    def chat_with_history(self, message: str, history: List) -> str:
+        """
+        Send a message with external conversation history
+        Useful for orchestrated conversations where history is shared
+        """
+        response = self.chain.invoke({
+            "history": history,
+            "input": message
+        })
+        
+        return response.content
+    
     def reset_history(self):
         """Clear conversation history"""
         self.conversation_history = []

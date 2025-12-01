@@ -1,10 +1,11 @@
 """Agents management endpoints"""
 from fastapi import APIRouter
 from services.agent_manager import agent_manager
+from constants import AGENT_CONFIGS
 
 router = APIRouter(tags=["Agents"])
 
-@router.get("/agents")
+@router.get("/")
 async def get_available_agents():
     """Get list of available agent types"""
     return {
@@ -14,6 +15,6 @@ async def get_available_agents():
                 "role": config["role"],
                 "model": config["model"]
             }
-            for agent_type, config in agent_manager.AGENT_CONFIGS.items()
+            for agent_type, config in AGENT_CONFIGS.items()
         }
     }
