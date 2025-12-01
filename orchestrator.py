@@ -3,6 +3,7 @@ from langchain.schema import HumanMessage, AIMessage, SystemMessage
 from agent import Agent
 from services.agent_manager import agent_manager
 from constants import OrchestrationMode
+from config import get_langsmith_metadata, get_run_name
 import asyncio
 
 
@@ -98,10 +99,31 @@ Keep the prompt concise (2-3 sentences max)."""
         
         # Use orchestrator's inherited LLM to generate intelligent prompt
         # Use shared_history so the orchestrator sees the full discussion context
-        response = self.chain.invoke({
-            "history": self.shared_history,
-            "input": request
-        })
+        config = {
+            "run_name": get_run_name(
+                "orchestrator_prompt_generation",
+                agent_role=agent.role,
+                round_num=round_num
+            ),
+            "metadata": get_langsmith_metadata(
+                session_id=self.session_id,
+                agent_type="orchestrator",
+                agent_role="Project Manager",
+                orchestration_mode=self.mode.value,
+                round_num=round_num,
+                target_agent=agent_type,
+                operation="prompt_generation"
+            ),
+            "tags": ["orchestrator", "prompt_generation", self.mode.value]
+        }
+        
+        response = self.chain.invoke(
+            {
+                "history": self.shared_history,
+                "input": request
+            },
+            config=config
+        )
         
         return response.content
     
@@ -121,10 +143,25 @@ Consider:
 
 Respond with ONLY 'CONTINUE' or 'COMPLETE' followed by a brief reason (one sentence)."""
         
-        response = self.chain.invoke({
-            "history": self.shared_history,
-            "input": request
-        })
+        config = {
+            "run_name": get_run_name("orchestrator_decision", agent_role="Project Manager"),
+            "metadata": get_langsmith_metadata(
+                session_id=self.session_id,
+                agent_type="orchestrator",
+                agent_role="Project Manager",
+                orchestration_mode=self.mode.value,
+                operation="should_continue_decision"
+            ),
+            "tags": ["orchestrator", "decision_making", self.mode.value]
+        }
+        
+        response = self.chain.invoke(
+            {
+                "history": self.shared_history,
+                "input": request
+            },
+            config=config
+        )
         
         decision = response.content.strip()
         should_continue = decision.startswith('CONTINUE')
@@ -156,7 +193,10 @@ Respond with ONLY 'CONTINUE' or 'COMPLETE' followed by a brief reason (one sente
                 # Agent responds based on full shared history
                 response = agent.chat_with_shared_history(
                     message=prompt,
-                    history=self.shared_history
+                    history=self.shared_history,
+                    session_id=self.session_id,
+                    round_num=round_num + 1,
+                    orchestration_mode=self.mode.value
                 )
                 
                 # Add to shared history with role label
@@ -200,7 +240,9 @@ Respond with ONLY 'CONTINUE' or 'COMPLETE' followed by a brief reason (one sente
             # Agent responds based on everything said so far in shared history
             response = agent.chat_with_shared_history(
                 message=prompt,
-                history=self.shared_history
+                history=self.shared_history,
+                session_id=self.session_id,
+                orchestration_mode=self.mode.value
             )
             
             # Add to shared history
@@ -268,7 +310,10 @@ Respond with ONLY 'CONTINUE' or 'COMPLETE' followed by a brief reason (one sente
                 # Agent responds
                 response = agent.chat_with_shared_history(
                     message=prompt,
-                    history=self.shared_history
+                    history=self.shared_history,
+                    session_id=self.session_id,
+                    round_num=round_num,
+                    orchestration_mode=self.mode.value
                 )
                 
                 # Add to shared history
@@ -339,9 +384,13 @@ Respond with ONLY 'CONTINUE' or 'COMPLETE' followed by a brief reason (one sente
                 loop = asyncio.get_event_loop()
                 response = await loop.run_in_executor(
                     None,
-                    agent.chat_with_shared_history,
-                    prompt,
-                    self.shared_history
+                    lambda: agent.chat_with_shared_history(
+                        message=prompt,
+                        history=self.shared_history,
+                        session_id=self.session_id,
+                        round_num=round_num + 1,
+                        orchestration_mode=self.mode.value
+                    )
                 )
                 
                 # Add to shared history with role label
@@ -400,9 +449,12 @@ Respond with ONLY 'CONTINUE' or 'COMPLETE' followed by a brief reason (one sente
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
                 None,
-                agent.chat_with_shared_history,
-                prompt,
-                self.shared_history
+                lambda: agent.chat_with_shared_history(
+                    message=prompt,
+                    history=self.shared_history,
+                    session_id=self.session_id,
+                    orchestration_mode=self.mode.value
+                )
             )
             
             # Add to shared history
@@ -468,9 +520,13 @@ Respond with ONLY 'CONTINUE' or 'COMPLETE' followed by a brief reason (one sente
                 loop = asyncio.get_event_loop()
                 response = await loop.run_in_executor(
                     None,
-                    agent.chat_with_shared_history,
-                    prompt,
-                    self.shared_history
+                    lambda: agent.chat_with_shared_history(
+                        message=prompt,
+                        history=self.shared_history,
+                        session_id=self.session_id,
+                        round_num=round_num,
+                        orchestration_mode=self.mode.value
+                    )
                 )
                 
                 # Add to shared history
