@@ -10,7 +10,7 @@ async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
     # Startup
     print("Initializing agents...")
-    agent_manager.initialize_default_agent()
+    agent_manager.initialize_default_agents()
     print("Agents ready!")
     
     yield
