@@ -1,4 +1,4 @@
-"""Orchestration endpoints for multi-agent conversations"""
+"""Multi-agent discussion endpoints"""
 from fastapi import APIRouter, HTTPException
 from typing import Optional
 from services.agent_manager import agent_manager
@@ -6,18 +6,18 @@ from services.orchestrator_manager import orchestrator_manager
 from models import StartOrchestrationRequest, OrchestrationResponse, OrchestrationHistoryResponse
 
 
-router = APIRouter(tags=["Orchestration"])
+router = APIRouter(tags=["Discussions"])
 
 
-@router.post("/start", response_model=OrchestrationResponse)
-async def start_orchestration(request: StartOrchestrationRequest):
+@router.post("/", response_model=OrchestrationResponse)
+async def start_discussion(request: StartOrchestrationRequest):
     """
-    Start a multi-agent orchestrated discussion
+    Start a multi-agent discussion
     
-    - **session_id**: Unique identifier for this orchestration session
+    - **session_id**: Unique identifier for this discussion session
     - **task**: The task/problem for agents to discuss
     - **agent_types**: List of agent types to include
-    - **mode**: Orchestration mode (round_robin or sequential)
+    - **mode**: Discussion mode (round_robin or sequential)
     - **rounds**: Number of rounds for round_robin mode
     """
     # Validate agent types
@@ -32,7 +32,7 @@ async def start_orchestration(request: StartOrchestrationRequest):
     if len(request.agent_types) < 2:
         raise HTTPException(
             status_code=400,
-            detail="Need at least 2 agent types for orchestration"
+            detail="Need at least 2 agent types for a discussion"
         )
     
     try:
@@ -59,15 +59,15 @@ async def start_orchestration(request: StartOrchestrationRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/history/{session_id}", response_model=OrchestrationHistoryResponse)
-async def get_orchestration_history(session_id: str):
-    """Get the full conversation history for an orchestration session"""
+@router.get("/{session_id}/history", response_model=OrchestrationHistoryResponse)
+async def get_discussion_history(session_id: str):
+    """Get the full conversation history for a discussion session"""
     orchestrator = orchestrator_manager.get_orchestrator(session_id)
     
     if not orchestrator:
         raise HTTPException(
             status_code=404,
-            detail=f"Orchestration session not found: {session_id}"
+            detail=f"Discussion session not found: {session_id}"
         )
     
     return OrchestrationHistoryResponse(
@@ -77,18 +77,18 @@ async def get_orchestration_history(session_id: str):
     )
 
 
-@router.post("/continue/{session_id}", response_model=OrchestrationResponse)
-async def continue_orchestration(
+@router.post("/{session_id}/continue", response_model=OrchestrationResponse)
+async def continue_discussion(
     session_id: str,
     rounds: Optional[int] = 1
 ):
-    """Continue an existing orchestration session for additional rounds"""
+    """Continue an existing discussion session for additional rounds"""
     orchestrator = orchestrator_manager.get_orchestrator(session_id)
     
     if not orchestrator:
         raise HTTPException(
             status_code=404,
-            detail=f"Orchestration session not found: {session_id}"
+            detail=f"Discussion session not found: {session_id}"
         )
     
     try:
@@ -105,25 +105,26 @@ async def continue_orchestration(
 
 
 @router.delete("/{session_id}")
-async def delete_orchestration(session_id: str):
-    """Delete an orchestration session"""
+async def delete_discussion(session_id: str):
+    """Delete a discussion session"""
     deleted = orchestrator_manager.delete_orchestrator(session_id)
     
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail=f"Orchestration session not found: {session_id}"
+            detail=f"Discussion session not found: {session_id}"
         )
     
     return {
         "status": "success",
-        "message": f"Orchestration session deleted: {session_id}"
+        "message": f"Discussion session deleted: {session_id}"
     }
 
 
-@router.get("/sessions")
-async def get_all_orchestration_sessions():
-    """Get all active orchestration sessions"""
+@router.get("/")
+async def get_all_discussions():
+    """Get all active discussion sessions"""
     return {
         "sessions": orchestrator_manager.get_all_sessions()
     }
+

@@ -1,12 +1,12 @@
-"""Session and chat management endpoints"""
+"""Single-agent chat endpoints"""
 from fastapi import APIRouter, HTTPException
 from models import ChatRequest, ChatResponse, HistoryResponse
 from services.agent_manager import agent_manager
 
-router = APIRouter(tags=["Sessions"])
+router = APIRouter(tags=["Chats"])
 
 
-@router.post("/chat", response_model=ChatResponse)
+@router.post("/", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
     Send a message to an agent and get a response
@@ -34,7 +34,7 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/history/{session_id}", response_model=HistoryResponse)
+@router.get("/{session_id}/history", response_model=HistoryResponse)
 async def get_history(
     session_id: str = "default",
     agent_type: str = "junior_engineer"
@@ -57,7 +57,7 @@ async def get_history(
     )
 
 
-@router.post("/reset/{session_id}")
+@router.delete("/{session_id}/history")
 async def reset_conversation(session_id: str = "default"):
     """
     Reset conversation history for a session
@@ -76,7 +76,7 @@ async def reset_conversation(session_id: str = "default"):
     }
 
 
-@router.delete("/session/{session_id}")
+@router.delete("/{session_id}")
 async def delete_session(session_id: str):
     """
     Delete a session entirely
@@ -97,10 +97,10 @@ async def delete_session(session_id: str):
     }
 
 
-@router.get("/sessions")
+@router.get("/")
 async def list_sessions():
     """
-    List all active sessions
+    List all active chat sessions
     """
     sessions = agent_manager.get_all_sessions()
     return {
