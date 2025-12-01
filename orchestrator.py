@@ -49,7 +49,7 @@ class Orchestrator:
                 agent = self.agents[agent_type]
                 
                 # Agent responds based on full conversation history
-                response = agent.chat_with_history(
+                response = agent.chat_with_shared_history(
                     message=f"Round {round_num + 1}: Share your perspective on this task.",
                     history=self.conversation_history
                 )
@@ -79,7 +79,7 @@ class Orchestrator:
             agent = self.agents[agent_type]
             
             # Agent responds based on everything said so far
-            response = agent.chat_with_history(
+            response = agent.chat_with_shared_history(
                 message="Share your perspective on this task.",
                 history=self.conversation_history
             )

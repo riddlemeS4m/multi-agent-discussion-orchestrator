@@ -51,7 +51,10 @@ class Agent:
             return f.read()
     
     def chat(self, message: str) -> str:
-        """Send a message and get a response"""
+        """
+        Send a message and get a response using the agent's own conversation history.
+        This is stateful - it updates the agent's internal history.
+        """
         response = self.chain.invoke({
             "history": self.conversation_history,
             "input": message
@@ -63,10 +66,11 @@ class Agent:
         
         return response.content
     
-    def chat_with_history(self, message: str, history: List) -> str:
+    def chat_with_shared_history(self, message: str, history: List) -> str:
         """
-        Send a message with external conversation history
-        Useful for orchestrated conversations where history is shared
+        Generate a response using external/shared conversation history.
+        This is stateless - it does NOT modify the agent's internal history.
+        Useful for orchestrated conversations where history is shared across agents.
         """
         response = self.chain.invoke({
             "history": history,
