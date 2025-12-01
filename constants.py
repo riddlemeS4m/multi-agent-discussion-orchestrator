@@ -23,3 +23,9 @@ class AgentType(str, Enum):
     """Available agent types"""
     JUNIOR_ENGINEER = "junior_engineer"
     PRODUCT_MANAGER = "product_manager"
+
+class DiscussionStatus(str, Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"

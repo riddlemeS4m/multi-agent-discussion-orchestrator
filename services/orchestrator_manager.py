@@ -1,5 +1,5 @@
 """Orchestration service for multi-agent conversations"""
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Callable, Awaitable
 from orchestrator import Orchestrator
 from constants import OrchestrationMode
 
@@ -13,13 +13,15 @@ class OrchestratorManager:
         self,
         session_id: str,
         agent_types: List[str],
-        mode: OrchestrationMode = OrchestrationMode.ROUND_ROBIN
+        mode: OrchestrationMode = OrchestrationMode.ROUND_ROBIN,
+        event_callback: Optional[Callable[[str, Dict], Awaitable[None]]] = None
     ) -> Orchestrator:
         """Create a new orchestrator"""
         orchestrator = Orchestrator(
             session_id=session_id,
             agent_types=agent_types,
-            mode=mode
+            mode=mode,
+            event_callback=event_callback
         )
         self.orchestrators[session_id] = orchestrator
         return orchestrator

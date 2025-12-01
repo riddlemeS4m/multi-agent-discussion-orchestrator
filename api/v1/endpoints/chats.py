@@ -1,6 +1,6 @@
 """Single-agent chat endpoints"""
 from fastapi import APIRouter, HTTPException
-from models import ChatRequest, ChatResponse, HistoryResponse
+from schemas import ChatRequest, ChatResponse, HistoryResponse
 from services.agent_manager import agent_manager
 
 router = APIRouter(tags=["Chats"])

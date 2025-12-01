@@ -23,8 +23,7 @@ class HistoryResponse(BaseModel):
     session_id: str
 
 
-class StartOrchestrationRequest(BaseModel):
-    session_id: str
+class StartAsyncDiscussionRequest(BaseModel):
     task: str
     agent_types: List[str] = Field(
         default=["junior_engineer", "product_manager"],
@@ -44,13 +43,16 @@ class StartOrchestrationRequest(BaseModel):
     )
 
 
-class OrchestrationResponse(BaseModel):
+class StartAsyncDiscussionResponse(BaseModel):
+    discussion_id: str
     session_id: str
-    responses: List[Dict[str, str]]
-    summary: Dict
+    status: str
+    message: str
+    websocket_url: str
 
 
-class OrchestrationHistoryResponse(BaseModel):
-    session_id: str
-    history: List[Dict[str, str]]
-    summary: Dict
+class DiscussionStatusResponse(BaseModel):
+    discussion_id: str
+    status: str
+    progress: Dict
+    events_count: int
