@@ -1,24 +1,33 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from services.agent_manager import agent_manager
 from api.v1.api import api_router
 import uvicorn
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan event handler for startup and shutdown"""
+    # Startup
+    print("Initializing agents...")
+    agent_manager.initialize_default_agent()
+    print("Agents ready!")
+    
+    yield
+    
+    # Shutdown (if needed in the future)
+    print("Shutting down...")
+
+
 app = FastAPI(
     title="Multi-Agent Discussion Orchestrator API",
     description="A simple multi-agent system for discussing and orchestrating discussions",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan
 )
 
 # Include API v1 router with prefix
 app.include_router(api_router, prefix="/api/v1")
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize default agent on startup"""
-    print("Initializing agents...")
-    agent_manager.initialize_default_agent()
-    print("Agents ready!")
 
 
 if __name__ == "__main__":
